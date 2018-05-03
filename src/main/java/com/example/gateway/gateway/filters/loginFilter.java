@@ -35,7 +35,16 @@ public class loginFilter extends ZuulFilter {
     public Object run() {
         RequestContext ctx = RequestContext.getCurrentContext();
         String token = authorizationService.getAuthorizationToken();
-        ctx.addZuulRequestHeader("Authorization", token);
+        if (token.isEmpty()) {
+            ctx.setSendZuulResponse( false );
+            ctx.setResponseStatusCode( 401 );
+
+        } else {
+            ctx.addZuulRequestHeader("Authorization", token);
+        }
+//        if (ctx.getRequest().getContextPath().equalsIgnoreCase( "sse" )) {
+//            ctx.addZuulRequestHeader( "OpCode", "sse" );
+//        }
         return null;
     }
 }

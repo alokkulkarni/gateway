@@ -1,27 +1,19 @@
 package com.example.gateway.gateway;
 
-import com.example.gateway.gateway.filters.loginFilter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.netflix.hystrix.EnableHystrix;
-import org.springframework.cloud.netflix.ribbon.RibbonClients;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.session.SessionManagementFilter;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
@@ -36,6 +28,9 @@ import java.io.IOException;
 //import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 
 @SpringBootApplication
+//@ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = GatewayRibbonConfig.class))
+//@RibbonClient(name = "GatewayRibbonConfig", configuration = GatewayRibbonConfig.class)
+@EnableDiscoveryClient
 @EnableZuulProxy
 public class GatewayApplication {
 
@@ -55,10 +50,10 @@ public class GatewayApplication {
 					.authorizeRequests()
 					//Allow access to all static resources without authentication
 					.antMatchers("/","/**/*.html").permitAll()
-//					.anyRequest().authenticated()
 					.and()
-//					.csrf().csrfTokenRepository(csrfTokenRepository())
-					.csrf().disable()
+					.csrf().csrfTokenRepository(csrfTokenRepository())
+					.disable()
+					.x509().x509AuthenticationFilter(new X509AuthenticationFilter()).and()
 					.addFilterAfter(csrfHeaderFilter(), SessionManagementFilter.class)
 					.httpBasic().disable();
 
